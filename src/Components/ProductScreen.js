@@ -1,6 +1,6 @@
-import React from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from "react"
+import { Link, useParams } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import {
   Row,
   Col,
@@ -9,13 +9,25 @@ import {
   Card,
   Button,
   Container,
-} from 'react-bootstrap'
-import products from '../products'
-import Rating from './Rating'
+} from "react-bootstrap"
+import { PayPalButton } from "react-paypal-button-v2"
+import products from "../products"
+import Rating from "./Rating"
 const ProductScreen = () => {
+  const [sdkReady, setsdkReady] = useState(false)
   const history = useNavigate()
-  const PaymentHandler = () => {
-    history(`/payment/${product.price}`)
+  const addPaypalScript = async () => {
+    const script = document.createElement("script")
+    script.type = "text/javascript"
+    script.src = `https://www.paypal.com/sdk/js?client-id=ARCFX71xR98mYVCrJJ8o5NlwLEEttqVRwnxhcBSWbiDYIoc-qax7PZQZGKyv6Xhk1tscWjy48u1Ve2RQ`
+    script.async = true
+    script.onload = () => {
+      setsdkReady(true)
+    }
+    document.body.appendChild(script)
+  }
+  const successPaymentHandler = () => {
+    history("/success")
   }
   const { id } = useParams()
   const product = products.find((p) => p._id === id)
@@ -59,8 +71,8 @@ const ProductScreen = () => {
                   <Col>Status:</Col>
                   <Col>
                     {product.countInStock > 0
-                      ? 'Parking Available'
-                      : 'Parking Not Available'}
+                      ? "Parking Available"
+                      : "Parking Not Available"}
                   </Col>
                 </Row>
               </ListGroup.Item>
@@ -84,10 +96,18 @@ const ProductScreen = () => {
                   className='btn btn-block'
                   type='button'
                   disabled={product.countInStock === 0}
-                  onClick={PaymentHandler}
+                  onClick={addPaypalScript}
                 >
                   Book Parking
                 </Button>
+              </ListGroup.Item>
+              <ListGroup.Item>
+                {sdkReady && (
+                  <PayPalButton
+                    amount={product.price}
+                    onSuccess={successPaymentHandler}
+                  />
+                )}
               </ListGroup.Item>
             </ListGroup>
           </Card>
